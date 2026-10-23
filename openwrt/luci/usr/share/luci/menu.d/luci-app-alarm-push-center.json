@@ -1,0 +1,8 @@
+{
+  "admin/services/alarm-push-center": {
+    "title": "报警推送中心",
+    "order": 60,
+    "action": { "type": "view", "path": "alarm-push-center/overview" },
+    "depends": { "acl": [ "luci-app-alarm-push-center" ] }
+  }
+}

@@ -1,0 +1,36 @@
+#!/bin/sh
+
+[ -n "$IPKG_INSTROOT" ] && exit 0
+
+mkdir -p /etc/alarm-push-center
+if [ ! -s /etc/alarm-push-center/web-password ]; then
+    tr -dc 'A-Za-z0-9' </dev/urandom | head -c 16 > /etc/alarm-push-center/web-password
+    printf '\n' >> /etc/alarm-push-center/web-password
+    chmod 600 /etc/alarm-push-center/web-password
+fi
+chmod 600 /etc/alarm-push-center/web-password
+[ -f /etc/alarm-push-center/console-settings.json ] && chmod 600 /etc/alarm-push-center/console-settings.json
+[ -f /etc/alarm-push-center/mobile-devices.json ] && chmod 600 /etc/alarm-push-center/mobile-devices.json
+[ -f /etc/alarm-push-center/phone-gateway.json ] && chmod 600 /etc/alarm-push-center/phone-gateway.json
+
+# Preserve the user's service preference on upgrades. A fresh installation is manual.
+if [ -e /etc/rc.d/S95alarm-push-center ]; then
+    /etc/init.d/alarm-push-center restart
+else
+    /etc/init.d/alarm-push-center disable
+fi
+
+# Rebuild LuCI menu caches after installing the bundled view.
+rm -f /tmp/luci-indexcache
+for cache in /tmp/luci-indexcache.* /tmp/luci-modulecache/*; do
+    [ -f "$cache" ] && rm -f "$cache"
+done
+[ -x /etc/init.d/rpcd ] && /etc/init.d/rpcd reload
+
+echo ""
+echo "工业报警推送中心已安装。"
+echo "管理地址：http://路由器IP:5080"
+echo "首次安装请在 LuCI 服务页面手动启动；开机启动可单独设置。"
+echo "管理密码保存在 /etc/alarm-push-center/web-password，仅管理员可读。"
+echo ""
+exit 0

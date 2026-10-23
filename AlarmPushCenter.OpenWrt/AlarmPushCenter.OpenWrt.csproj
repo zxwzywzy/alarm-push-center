@@ -1,0 +1,62 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>alarm-push-center</AssemblyName>
+    <RootNamespace>AlarmPushCenter</RootNamespace>
+    <Version>1.7.0</Version>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <ServerGarbageCollection>false</ServerGarbageCollection>
+    <PublishTrimmed>true</PublishTrimmed>
+    <TrimMode>partial</TrimMode>
+    <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>
+    <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="tests/**/*.cs" />
+    <Content Remove="tests/security/**" />
+    <Content Remove="tests/phone/**" />
+    <Content Remove="tests/updates/**" />
+    <Compile Include="..\AlarmPushCenter\Models.cs" Link="Core\Models.cs" />
+    <Compile Include="..\AlarmPushCenter\ConfigStore.cs" Link="Core\ConfigStore.cs" />
+    <Compile Include="..\AlarmPushCenter\ConfigValidator.cs" Link="Core\ConfigValidator.cs" />
+    <Compile Include="..\AlarmPushCenter\AlarmHistory.cs" Link="Core\AlarmHistory.cs" />
+    <Compile Include="..\AlarmPushCenter\AlarmMonitor.cs" Link="Core\AlarmMonitor.cs" />
+    <Compile Include="..\AlarmPushCenter\AlarmCallTracker.cs" Link="Core\AlarmCallTracker.cs" />
+    <Compile Include="..\AlarmPushCenter\UfiPhone.cs" Link="Core\UfiPhone.cs" />
+    <Compile Include="..\AlarmPushCenter\RuntimeTelemetry.cs" Link="Core\RuntimeTelemetry.cs" />
+    <Compile Include="..\AlarmPushCenter\AppUpdates.cs" Link="Core\AppUpdates.cs" />
+    <Compile Include="..\AlarmPushCenter\ProductDisclaimer.cs" Link="Core\ProductDisclaimer.cs" />
+    <EmbeddedResource Include="..\DISCLAIMER.txt" LogicalName="AlarmPushCenter.Disclaimer.txt" />
+    <Compile Include="..\AlarmPushCenter\Sources.cs" Link="Core\Sources.cs" />
+    <Compile Include="..\AlarmPushCenter\IndustrialSources.cs" Link="Core\IndustrialSources.cs" />
+    <Compile Include="..\AlarmPushCenter\Notifiers.cs" Link="Core\Notifiers.cs" />
+    <Compile Include="..\AlarmPushCenter\EnterpriseBots.cs" Link="Core\EnterpriseBots.cs" />
+    <Compile Include="..\AlarmPushCenter\BotInteraction.cs" Link="Core\BotInteraction.cs" />
+    <Compile Include="..\AlarmPushCenter\BotCommandEngine.cs" Link="Core\BotCommandEngine.cs" />
+    <Compile Include="..\AlarmPushCenter\BotRuntime.cs" Link="Core\BotRuntime.cs" />
+    <Compile Include="..\AlarmPushCenter\PlcCommandWriter.cs" Link="Core\PlcCommandWriter.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Beckhoff.TwinCAT.Ads" Version="7.0.317" />
+    <PackageReference Include="MQTTnet" Version="4.3.7.1207" />
+    <PackageReference Include="NModbus" Version="3.0.83" />
+    <PackageReference Include="Opc.UaFx.Client" Version="2.56.0" />
+    <PackageReference Include="S7netplus" Version="0.20.0" />
+    <PackageReference Include="System.IO.Ports" Version="10.0.11" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- These libraries use reflection for protocol models and must keep their public metadata. -->
+    <TrimmerRootAssembly Include="alarm-push-center" />
+    <TrimmerRootAssembly Include="Opc.UaFx.Client" />
+    <TrimmerRootAssembly Include="S7.Net" />
+    <TrimmerRootAssembly Include="MQTTnet" />
+    <TrimmerRootAssembly Include="NModbus" />
+    <TrimmerRootAssembly Include="TwinCAT.Ads" />
+    <TrimmerRootAssembly Include="TwinCAT.Ads.Abstractions" />
+  </ItemGroup>
+</Project>

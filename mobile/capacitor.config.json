@@ -1,0 +1,6 @@
+{
+  "appId": "cn.zxzyzy.alarmhub", "appName": "路由与报警", "webDir": "dist",
+  "plugins": { "CapacitorHttp": { "enabled": true } },
+  "ios": { "contentInset": "never" },
+  "android": { "allowMixedContent": false }
+}

@@ -1,0 +1,7 @@
+{
+  "luci-app-alarm-push-center": {
+    "description": "Manage alarm push center service only",
+    "read": { "ubus": { "service": [ "list" ], "file": [ "exec" ] }, "file": { "/etc/init.d/alarm-push-center": [ "exec" ] } },
+    "write": { "ubus": { "file": [ "exec" ] }, "file": { "/etc/init.d/alarm-push-center": [ "exec" ] } }
+  }
+}

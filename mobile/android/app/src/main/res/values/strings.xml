@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">路由与报警</string>
+    <string name="title_activity_main">路由与报警</string>
+    <string name="package_name">cn.zxzyzy.alarmhub</string>
+    <string name="custom_url_scheme">cn.zxzyzy.alarmhub</string>
+</resources>

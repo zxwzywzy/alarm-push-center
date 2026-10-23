@@ -1,0 +1,3 @@
+Category,Code,instance_name,Text
+warning,1001,Motor_01,电机温度高
+error,1002,Motor_01,电机过载

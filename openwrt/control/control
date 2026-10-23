@@ -1,0 +1,8 @@
+Package: alarm-push-center
+Version: 1.0.0-1
+Architecture: aarch64_cortex-a53
+Maintainer: Alarm Push Center
+Section: utils
+Priority: optional
+Depends: libc, libgcc1, libstdcpp6, zlib, libopenssl3, libopenssl-legacy, ca-bundle, zoneinfo-asia, curl, jsonfilter, ubus
+Description: Industrial PLC alarm collector and bot notification center with a modern web UI for Cudy TR3000 OpenWrt.

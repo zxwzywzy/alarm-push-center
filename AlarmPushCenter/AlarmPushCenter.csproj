@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationIcon>Assets\app-icon.ico</ApplicationIcon>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Version>1.4.0</Version>
+    <AssemblyVersion>1.4.0.0</AssemblyVersion>
+    <FileVersion>1.4.0.0</FileVersion>
+    <Product>工业报警推送中心</Product>
+    <Company>Alarm Push Center</Company>
+    <Description>工业设备报警采集、机器人推送与 PLC 交互客户端</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="..\DISCLAIMER.txt" LogicalName="AlarmPushCenter.Disclaimer.txt" />
+    <EmbeddedResource Include="Assets\app-icon.ico" LogicalName="AlarmPushCenter.AppIcon.ico" />
+    <EmbeddedResource Include="Assets\app-icon.png" LogicalName="AlarmPushCenter.AppIcon.png" />
+    <PackageReference Include="Beckhoff.TwinCAT.Ads" Version="7.0.317" />
+    <PackageReference Include="MQTTnet" Version="4.3.7.1207" />
+    <PackageReference Include="NModbus" Version="3.0.83" />
+    <PackageReference Include="Opc.UaFx.Client" Version="2.56.0" />
+    <PackageReference Include="S7netplus" Version="0.20.0" />
+    <PackageReference Include="System.IO.Ports" Version="10.0.11" />
+  </ItemGroup>
+
+  <Target Name="BuildTiaOpennessCollector" BeforeTargets="Build">
+    <MSBuild Projects="$(MSBuildProjectDirectory)\..\TiaOpennessImportAlarmCollector\TiaOpennessImportAlarmCollector.csproj"
+             Targets="Restore;Build" Properties="Configuration=$(Configuration)"
+             RemoveProperties="RuntimeIdentifier;SelfContained;PublishSingleFile" />
+  </Target>
+  <Target Name="CopyTiaOpennessCollector" AfterTargets="Build">
+    <ItemGroup>
+      <TiaCollectorFiles Include="$(MSBuildProjectDirectory)\..\TiaOpennessImportAlarmCollector\bin\$(Configuration)\net48\*.*" Exclude="**\*.pdb" />
+      <TiaCollectorFiles Include="$(MSBuildProjectDirectory)\..\TiaOpennessImportAlarmCollector\AlarmPushCenter.TiaCollector.ps1" />
+    </ItemGroup>
+    <Copy SourceFiles="@(TiaCollectorFiles)" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="PublishTiaOpennessCollector" AfterTargets="Publish">
+    <ItemGroup>
+      <TiaCollectorPublishFiles Include="$(MSBuildProjectDirectory)\..\TiaOpennessImportAlarmCollector\bin\$(Configuration)\net48\*.*" Exclude="**\*.pdb" />
+      <TiaCollectorPublishFiles Include="$(MSBuildProjectDirectory)\..\TiaOpennessImportAlarmCollector\AlarmPushCenter.TiaCollector.ps1" />
+    </ItemGroup>
+    <Copy SourceFiles="@(TiaCollectorPublishFiles)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>

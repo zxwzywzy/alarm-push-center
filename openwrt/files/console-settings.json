@@ -1,0 +1,10 @@
+{
+  "StartCollectionOnLaunch": false,
+  "RecoveryEnabled": false,
+  "RecoveryEmail": "",
+  "SmtpHost": "",
+  "SmtpPort": 587,
+  "SmtpUser": "",
+  "SmtpPassword": "",
+  "SmtpFrom": ""
+}

@@ -1,0 +1,38 @@
+#!/bin/sh /etc/rc.common
+
+START=95
+STOP=10
+USE_PROCD=1
+
+start_service() {
+    procd_open_instance
+    procd_set_param command /usr/bin/alarm-push-center
+    procd_set_param env \
+        ALARM_LISTEN=http://0.0.0.0:5080 \
+        ALARM_CONFIG=/etc/alarm-push-center/config.json \
+        ALARM_PASSWORD_FILE=/etc/alarm-push-center/web-password \
+        DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1 \
+        ASPNETCORE_CONTENTROOT=/usr/bin \
+        DOTNET_BUNDLE_EXTRACT_BASE_DIR=/tmp/alarm-push-center
+    # .NET reads IANA tzfiles; OpenWrt's /etc/TZ POSIX string alone is insufficient.
+    local zone
+    zone="$(uci -q get system.@system[0].zonename | tr ' ' '_')"
+    case "$zone" in *..*|/*|'') zone="" ;; esac
+    if [ -n "$zone" ] && [ -r "/usr/share/zoneinfo/$zone" ]; then
+        procd_append_param env "TZ=$zone"
+    fi
+    procd_set_param respawn 3600 5 5
+    procd_set_param stdout 1
+    procd_set_param stderr 1
+    procd_set_param limits nofile="4096 4096"
+    procd_close_instance
+}
+
+reload_service() {
+    stop
+    start
+}
+
+service_triggers() {
+    procd_add_reload_trigger alarm-push-center system
+}

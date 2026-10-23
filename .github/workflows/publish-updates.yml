@@ -1,0 +1,38 @@
+name: Publish update catalog
+on:
+  release:
+    types: [published, released, edited]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: stable-update-catalog
+  cancel-in-progress: false
+jobs:
+  catalog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Publish verified platform catalog
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          ready=0
+          for attempt in 1 2 3 4 5 6; do
+            if node tools/publish-update-catalog.cjs; then ready=1; break; fi
+            sleep 10
+          done
+          test "$ready" = 1
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add updates/stable.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Update verified download catalog'
+            git push origin HEAD:main
+          fi

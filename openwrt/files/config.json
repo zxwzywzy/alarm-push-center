@@ -1,0 +1,54 @@
+{
+  "version": 7,
+  "sources": [
+    {
+      "id": "src_demo",
+      "name": "演示设备",
+      "protocol": "mock",
+      "enabled": false,
+      "poll_seconds": 2,
+      "params": {
+        "toggle_every": "8",
+        "code": "1001",
+        "text": "模拟温度过高",
+        "timeout": "5"
+      }
+    }
+  ],
+  "rules": [
+    {
+      "id": "rule_demo",
+      "name": "默认报警",
+      "source_id": "src_demo",
+      "enabled": true,
+      "severity": "warning",
+      "match_code": "",
+      "match_key": "",
+      "match_value": "",
+      "cooldown_seconds": 0,
+      "alarm_texts": [],
+      "alarm_text_lists": [],
+      "message_template": "【{severity}】{source_name}\n报警编号：{code}\n报警内容：{text}\n时间：{time}",
+      "recovery_template": "【恢复】{source_name}\n报警编号：{code}\n时间：{time}",
+      "note": ""
+    }
+  ],
+  "targets": [
+    {
+      "id": "target_demo",
+      "name": "Telegram 报警群",
+      "channel": "telegram",
+      "enabled": false,
+      "token": "",
+      "webhook_url": "",
+      "recipients": [],
+      "params": {
+        "receive_enabled": "否",
+        "allow_plc_write": "否",
+        "alarm_show_buttons": "否",
+        "admin_ids": "",
+        "command_defs": "[]"
+      }
+    }
+  ]
+}

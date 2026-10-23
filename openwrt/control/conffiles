@@ -1,0 +1,4 @@
+/etc/alarm-push-center/config.json
+/etc/alarm-push-center/console-settings.json
+/etc/alarm-push-center/mobile-devices.json
+/etc/alarm-push-center/phone-gateway.json

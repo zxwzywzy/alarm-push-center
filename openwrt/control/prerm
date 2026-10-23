@@ -1,0 +1,6 @@
+#!/bin/sh
+
+[ -n "$IPKG_INSTROOT" ] && exit 0
+/etc/init.d/alarm-push-center stop 2>/dev/null || true
+[ "$1" = "upgrade" ] || /etc/init.d/alarm-push-center disable 2>/dev/null || true
+exit 0

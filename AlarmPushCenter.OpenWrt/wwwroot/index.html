@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#147d64" />
+    <title>工业报警推送中心</title>
+    <link rel="stylesheet" href="/app.css?v=ui-20261023" />
+    <link rel="stylesheet" href="/workspace.css?v=ui-20261023" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main-workspace">跳到主要内容</a>
+    <div class="ambient a1"></div>
+    <div class="ambient a2"></div>
+    <section id="login" class="login-shell hidden">
+      <div class="login-story">
+        <a class="login-brand" href="/" aria-label="报警推送中心首页"><div class="brand-mark small"><span></span><i></i></div><strong>报警推送中心</strong></a>
+        <div class="login-intro"><h2>设备的每一次变化，<br><em>都值得及时响应。</em></h2><p>从采集到通知，把设备状态、报警信息和处理动作放在同一个工作台。</p></div>
+        <div class="login-flow" aria-label="报警处理流程"><div><span>设备采集</span><small>OPC UA · S7 · Modbus · MQTT</small></div><i aria-hidden="true"></i><div><span>规则匹配</span><small>报警文本 · 等级 · 持续时间</small></div><i aria-hidden="true"></i><div><span>通知与响应</span><small>机器人消息 · 交互按钮 · 电话提醒</small></div></div>
+        <p class="login-caption">OpenWrt 工作台 · 电脑与手机均可使用</p>
+      </div>
+      <div class="login-access">
+      <form id="login-form" class="login-card">
+        <h1>登录工作台</h1>
+        <p class="muted">使用报警插件的管理密码继续。</p>
+        <label
+          ><span>管理密码</span><input
+            id="password"
+            type="password"
+            autocomplete="current-password"
+            placeholder="请输入设备管理密码"
+            required
+        /></label>
+        <button class="primary full" type="submit">登录工作台 <b aria-hidden="true">→</b></button>
+        <p id="login-error" class="form-error" role="alert"></p>
+        <button type="button" id="forgot-password" class="text-btn full">忘记密码？通过邮箱找回</button>
+        <div id="recovery-panel" class="hidden">
+          <p id="recovery-hint" class="muted"></p>
+          <button type="button" id="recovery-send" class="ghost full">发送验证码</button>
+          <label>邮箱验证码<input id="recovery-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" /></label>
+          <label>新管理密码<input id="recovery-password" type="password" autocomplete="new-password" minlength="8" maxlength="128" /></label>
+          <label>再次输入新密码<input id="recovery-confirm" type="password" autocomplete="new-password" minlength="8" maxlength="128" /></label>
+          <button type="button" id="recovery-reset" class="primary full">重置密码</button>
+          <p id="recovery-error" class="form-error" role="alert"></p>
+        </div>
+      </form>
+      <p class="login-footnote">此密码用于报警插件，与 OpenWrt 后台密码独立。<br><a href="/disclaimer" target="_blank" rel="noopener">免责声明与使用风险</a></p>
+      </div>
+    </section>
+
+    <div id="app" class="app-shell hidden">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark small"><span></span><i></i></div>
+          <div><strong>报警推送中心</strong><small>设备 · 报警 · 通知</small></div>
+        </div>
+        <div class="nav-caption">工作空间</div>
+        <nav aria-label="工作区导航">
+          <button data-page="dashboard" class="active">
+            <span data-icon="overview" aria-hidden="true"></span>运行总览
+          </button>
+          <button data-page="sources"><span data-icon="device" aria-hidden="true"></span>设备工作区</button>
+          <button data-page="rules" class="hidden"><span>◇</span>报警规则</button>
+          <button data-page="targets"><span data-icon="notification" aria-hidden="true"></span>通知与交互</button>
+          <button data-page="history" class="hidden"><span>◷</span>历史报警</button>
+          <button data-page="system"><span data-icon="settings" aria-hidden="true"></span>系统设置</button>
+        </nav>
+        <div class="sidebar-foot">
+          <span class="pulse-dot"></span>
+          <div>
+            <b id="side-state">服务检查中</b
+            ><small id="side-device">0 台设备在线</small>
+          </div>
+        </div>
+      </aside>
+
+      <main id="main-workspace" tabindex="-1">
+        <header>
+          <div class="header-title">
+            <button id="menu" class="icon-button" aria-label="展开导航">
+              ☰
+            </button>
+            <div>
+              <p class="eyebrow">设备管理 / 工作台</p>
+              <h1 id="page-title">运行总览</h1>
+            </div>
+          </div>
+          <div class="header-actions">
+            <span id="clock"></span
+            ><span id="draft-state" class="draft-state">配置已同步</span
+            ><button id="save" class="primary">保存并应用</button
+            ><button id="logout" class="ghost">退出</button>
+          </div>
+        </header>
+
+        <section id="dashboard" class="page active">
+          <div class="overview-heading">
+            <div>
+              <h3>产线运行工作台</h3>
+              <p>先看连接与报警，再处理需要关注的设备。</p>
+            </div>
+            <div class="overview-actions">
+              <span id="sync-state">等待更新</span
+              ><button class="ghost" data-goto="sources">管理设备 ↗</button>
+            </div>
+          </div>
+          <div class="hero card">
+            <div class="hero-copy">
+              <span class="status-pill"
+                ><i></i><b id="hero-state">正在检查采集服务</b></span
+              >
+              <p>连接状态与采集心跳每 5 秒更新</p>
+              <div class="hero-actions">
+                <button class="primary" data-goto="sources">
+                  配置采集设备 →</button
+                ><button class="ghost" data-runtime="restart">
+                  重新加载服务
+                </button>
+              </div>
+            </div>
+            <div class="health-visual">
+              <div id="health-ring" class="health-ring">
+                <div>
+                  <strong id="connection-rate">—</strong><span>设备在线率</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="metrics">
+            <article class="card metric">
+              <small>在线设备</small><strong id="m-online">0</strong
+              ><span id="m-total">共 0 台</span>
+            </article>
+            <article class="card metric">
+              <small>最近报警</small><strong id="m-alarms">0</strong
+              ><span>最近 20 条中的报警记录</span>
+            </article>
+            <article class="card metric">
+              <small>服务运行</small><strong id="m-uptime">00:00</strong
+              ><span>本次采集服务运行时长</span>
+            </article>
+            <article class="card metric">
+              <small>通知通道</small><strong id="m-targets">0</strong
+              ><span>已启用目标</span>
+            </article>
+          </div>
+          <div class="split">
+            <article class="trend-console">
+              <div class="trend-heading"><div><h3>报警与采集趋势</h3><p>每 5 秒记录一次 · 服务本次运行数据</p></div><label>时间范围<select id="trend-range" aria-label="趋势时间范围"><option value="5">最近 5 分钟</option><option value="15" selected>最近 15 分钟</option><option value="60">最近 1 小时</option></select></label></div>
+              <div class="trend-plots"><section class="trend-plot" aria-label="报警与连接趋势">
+              <div class="trend-heading"><h3>报警与在线设备</h3></div>
+              <div class="trend-legend"><span class="cyan">● 新增报警</span><span class="green">● 恢复事件</span><span class="purple">● 在线设备</span></div>
+              <div id="alarm-trend" class="trend-svg"></div>
+              </section><section class="trend-plot" aria-label="采集耗时与资源趋势">
+              <div class="trend-heading"><h3>采集耗时与程序资源</h3><small>CPU 为本程序占整机算力的比例</small></div>
+              <div class="trend-legend"><span class="cyan">● 平均采集耗时（毫秒）</span><span class="purple">● 程序 CPU（%）</span></div>
+              <div id="load-trend" class="trend-svg"></div>
+              </section></div>
+              <div id="telemetry-current" class="telemetry-current"></div>
+              <p class="trend-note">报警数按规则实际触发计数；在线设备使用右侧坐标。停机期间采集为零，程序资源仍继续记录。趋势最多保留 1 小时，程序退出后清空。</p>
+            </article>
+            <article class="card">
+              <div class="card-head">
+                <div>
+                  <h3>设备连接</h3>
+                </div>
+                <button class="text-btn" data-goto="sources">查看全部 →</button>
+              </div>
+              <div id="device-list" class="device-list"></div>
+            </article>
+            <article class="card">
+              <div class="card-head">
+                <div>
+                  <h3>运行动态</h3>
+                </div>
+              </div>
+              <div id="event-list" class="timeline"></div>
+            </article>
+          </div>
+        </section>
+
+        <section id="sources" class="page">
+          <div id="device-context" class="device-context"></div>
+          <div class="device-subnav" role="group" aria-label="当前设备配置">
+            <button class="active" data-device-panel="connection">连接与采集</button>
+            <button data-device-panel="rules">报警规则与文本</button>
+            <button data-device-panel="phone">电话提醒</button>
+            <button data-device-panel="history">设备历史</button>
+          </div>
+          <div class="page-toolbar">
+            <div>
+              <h3>连接参数</h3>
+              <p>只显示当前设备；高级设置按需展开。</p>
+            </div>
+            <button id="add-source" class="primary">＋ 新增设备</button>
+          </div>
+          <div id="device-check-result" class="device-check-result hidden" aria-live="polite"></div>
+          <div class="workspace">
+            <div id="source-tabs" class="item-list"></div>
+            <form id="source-form" class="card editor"></form>
+          </div>
+        </section>
+        <section id="rules" class="page">
+          <div class="page-toolbar">
+            <div>
+              <h3>报警规则与文本库</h3>
+              <p>匹配报警码、设置等级，并维护报警描述字典。</p>
+            </div>
+            <button id="add-rule" class="primary">＋ 新增规则</button>
+          </div>
+          <div class="workspace">
+            <div id="rule-tabs" class="item-list"></div>
+            <form id="rule-form" class="card editor"></form>
+          </div>
+        </section>
+        <section id="targets" class="page">
+          <div class="page-toolbar">
+            <div>
+              <h3>通知与机器人交互</h3>
+              <p>在一个页面完成通道、凭据、收件人与交互按钮配置。</p>
+            </div>
+            <button id="add-target" class="primary">＋ 新增目标</button>
+          </div>
+          <div class="workspace">
+            <div id="target-tabs" class="item-list"></div>
+            <form id="target-form" class="card editor"></form>
+          </div>
+        </section>
+        <section id="history" class="page">
+          <div class="page-toolbar">
+            <div>
+              <h3>历史报警</h3>
+              <p>按设备筛选，每页 10 条，最多读取最近 20 条。</p>
+            </div>
+            <div class="toolbar-row">
+              <select id="history-source"></select
+              ><button id="refresh-history" class="ghost">刷新</button
+              ><button id="clear-history" class="danger">清除所选设备</button>
+            </div>
+          </div>
+          <div class="card table-card">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>状态</th>
+                    <th>时间</th>
+                    <th>设备</th>
+                    <th>报警码</th>
+                    <th>报警内容</th>
+                    <th>等级</th>
+                  </tr>
+                </thead>
+                <tbody id="history-body">
+                  <tr>
+                    <td colspan="6" class="empty">请选择设备查看报警</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="pagination">
+              <button id="history-prev">← 上一页</button
+              ><span id="history-page">第 1 页</span
+              ><button id="history-next">下一页 →</button>
+            </div>
+          </div>
+        </section>
+        <section id="system" class="page">
+          <div class="settings-navigation" role="group" aria-label="系统设置分类">
+            <button type="button" data-settings="updates" aria-pressed="false">版本更新</button>
+            <button type="button" data-settings="service" class="active" aria-pressed="true">采集服务</button><button type="button" data-settings="security" aria-pressed="false">账户与安全</button><button type="button" data-settings="mobile" aria-pressed="false">手机连接</button><button type="button" data-settings="gateway" aria-pressed="false">电话网关</button><button type="button" data-settings="advanced" aria-pressed="false">高级与帮助</button>
+          </div>
+          <div class="settings-heading"><h2 id="settings-title">采集服务</h2><p id="settings-description">查看运行状态，决定何时开始采集。</p></div>
+          <div class="settings-grid">
+            <article class="card wide" data-settings-section="updates" id="update-panel">
+              <h3>插件更新</h3>
+              <p id="update-current" class="muted">正在读取版本…</p>
+              <p id="update-status" role="status" aria-live="polite">尚未检查更新</p>
+              <div class="button-row"><button type="button" class="ghost" id="update-check">检查更新</button><button type="button" class="primary" id="update-apply" disabled>备份并更新</button><a id="update-notes" class="text-btn" target="_blank" rel="noopener" href="https://github.com/zxwzywzy/alarm-push-center/releases">更新说明</a></div>
+              <form id="update-settings-form" class="form-grid">
+                <label class="toggle-row"><span>自动检查更新</span><span class="switch"><input type="checkbox" name="check_automatically" checked><i></i></span></label>
+                <label class="toggle-row"><span>维护时段自动安装</span><span class="switch"><input type="checkbox" name="install_automatically"><i></i></span></label>
+                <label class="field"><span>维护开始（路由器本地小时）</span><input name="maintenance_start_hour" type="number" min="0" max="23" value="3" required></label>
+                <label class="field"><span>维护结束（小时）</span><input name="maintenance_end_hour" type="number" min="0" max="23" value="5" required></label>
+                <label class="field full-span"><span>当前管理密码（确认设置或更新）</span><input type="password" name="current_password" autocomplete="current-password" required></label>
+                <div class="full-span"><button class="primary" type="submit">保存更新偏好</button></div>
+              </form>
+              <p class="muted">每 6 小时检查一次；有激活报警、待发送消息或电话操作时暂缓安装。安装期间服务短暂重启，保留配置、密码、手机授权和原采集状态；失败时尝试回退上一版。</p>
+            </article>
+            <article class="card" data-settings-section="service">
+              <p class="eyebrow">运行控制</p>
+              <h3>采集服务</h3>
+              <p class="muted">停止服务后配置仍会保留，重新启动即可恢复。</p>
+              <label class="toggle-row"><span>当前运行采集</span><span class="switch"><input id="collection-switch" type="checkbox" /><i></i></span></label>
+              <div class="button-row">
+                <button class="primary" data-runtime="start">启动</button
+                ><button class="ghost" data-runtime="restart">重启</button
+                ><button class="danger" data-runtime="stop">停止</button>
+              </div>
+              <div class="startup-preference"><button type="button" class="text-btn" data-settings="security">设置启动偏好 →</button><p class="muted">可关闭服务启动后的自动采集。插件是否随路由器开机启动，请在 OpenWrt 插件页设置。</p></div>
+            </article>
+            <article class="card wide" data-settings-section="security">
+              <h3>邮箱找回与启动偏好</h3>
+              <p class="muted">先配置邮箱，忘记密码时可在登录页获取验证码。SMTP 需要支持 STARTTLS，通常使用端口 587。</p>
+              <form id="console-settings-form" class="password-fields">
+                <label class="toggle-row"><span>服务启动后自动采集</span><input name="start_collection_on_launch" type="checkbox" /></label>
+                <label class="toggle-row"><span>启用邮箱找回</span><input name="recovery_enabled" type="checkbox" /></label>
+                <details class="advanced-section" id="recovery-mail-settings"><summary>邮箱服务设置 <span>SMTP 服务器与发件信息</span></summary><div class="form-grid">
+                  <label class="field"><span>找回邮箱</span><input name="recovery_email" type="email" autocomplete="email" /></label>
+                  <label class="field"><span>SMTP 服务器</span><input name="smtp_host" placeholder="smtp.example.com" /></label>
+                  <label class="field"><span>SMTP 端口</span><input name="smtp_port" type="number" min="1" max="65535" value="587" /></label>
+                  <label class="field"><span>发件人邮箱</span><input name="smtp_from" type="email" /></label>
+                  <label class="field"><span>SMTP 用户名</span><input name="smtp_user" autocomplete="off" /></label>
+                  <label class="field"><span>SMTP 授权码</span><input name="smtp_password" type="password" autocomplete="new-password" placeholder="留空保留已保存的授权码" /></label>
+                </div></details>
+                <label class="field"><span>当前管理密码（确认设置）</span><input name="current_password" type="password" autocomplete="current-password" required /></label>
+                <button class="primary" type="submit">保存启动与找回设置</button>
+                <p id="settings-error" class="form-error" role="alert"></p>
+              </form>
+            </article>
+            <article class="card" data-settings-section="service">
+              <p class="eyebrow">设备信息</p>
+              <h3>OpenWrt 部署信息</h3>
+              <dl>
+                <div>
+                  <dt>目标架构</dt>
+                  <dd>aarch64_cortex-a53</dd>
+                </div>
+                <div>
+                  <dt>服务端口</dt>
+                  <dd>5080</dd>
+                </div>
+                <div>
+                  <dt>配置目录</dt>
+                  <dd>/etc/alarm-push-center</dd>
+                </div>
+              </dl>
+            </article>
+            <article class="card password-card" data-settings-section="security">
+              <p class="eyebrow">账户安全</p>
+              <h3>修改管理密码</h3>
+              <p class="muted">
+                仅修改本配置台密码，不影响 OpenWrt 登录。修改后所有会话退出。
+              </p>
+              <form id="password-form" class="password-fields">
+                <label class="field"
+                  ><span>当前密码</span
+                  ><input
+                    name="current_password"
+                    type="password"
+                    autocomplete="current-password"
+                    required /></label
+                ><label class="field"
+                  ><span>新密码</span
+                  ><input
+                    name="new_password"
+                    type="password"
+                    autocomplete="new-password"
+                    minlength="8"
+                    maxlength="128"
+                    placeholder="至少 8 个字符"
+                    required /></label
+                ><label class="field"
+                  ><span>再次输入新密码</span
+                  ><input
+                    name="confirm_password"
+                    type="password"
+                    autocomplete="new-password"
+                    required
+                /></label>
+                <p id="password-error" class="form-error" role="alert"></p>
+                <button class="primary" type="submit">
+                  修改密码并重新登录
+                </button>
+              </form>
+            </article>
+            <article class="card" data-settings-section="advanced">
+              <p class="eyebrow">使用提示</p>
+              <h3>从设备开始配置</h3>
+              <ol class="guide">
+                <li>
+                  <b>添加采集设备</b><span>选择协议，填写地址与节点。</span>
+                </li>
+                <li>
+                  <b>打开设备报警页</b><span>仅维护当前设备的规则、文本库和历史。</span>
+                </li>
+                <li>
+                  <b>连接通知通道</b><span>填好机器人凭据后测试发送。</span>
+                </li>
+              </ol>
+              <a
+                class="text-btn"
+                href="http://192.168.1.1/cgi-bin/luci/"
+                id="luci-link"
+                >返回 OpenWrt 后台 →</a
+              >
+            </article>
+            <article class="card wide" data-settings-section="advanced">
+              <p class="eyebrow">高级选项</p>
+              <a href="/disclaimer" target="_blank" rel="noopener" class="text-btn">阅读免责声明与使用风险</a>
+              <h3>高级配置预览</h3>
+              <p class="muted">用于诊断。日常配置请使用上方可视化表单。</p>
+              <details>
+                <summary>展开只读配置预览（敏感字段已隐藏）</summary>
+                <textarea id="raw-config" class="code" readonly></textarea>
+              </details>
+            </article>
+          </div>
+        </section>
+      </main>
+    </div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <div id="modal" class="modal hidden">
+      <div
+        class="modal-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+      >
+        <h3 id="modal-title"></h3>
+        <p id="modal-text"></p>
+        <div class="button-row">
+          <button id="modal-cancel" class="ghost">取消</button
+          ><button id="modal-ok" class="danger">确认</button>
+        </div>
+      </div>
+    </div>
+    <script src="/ui-core.js?v=1.6.0"></script>
+    <script src="/telemetry-ui.js?v=ui-20261023"></script>
+    <script src="/app.js?v=ui-20261023"></script>
+    <script src="/phone-ui.js?v=ui-20261023"></script>
+    <script src="/workspace-ui.js?v=ui-20261023"></script>
+    <script src="/updates.js?v=1.7.0"></script>
+    <script type="module" src="/mobile-pairing.js?v=1.6.0"></script>
+  </body>
+</html>

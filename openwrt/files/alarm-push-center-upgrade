@@ -1,0 +1,78 @@
+#!/bin/sh
+# Runs as its own procd job; stopping the main service cannot kill the updater.
+set -eu
+job="${1:-}"
+case "$job" in /tmp/alarm-push-center-updates/*) ;; *) exit 2 ;; esac
+id="${job##*/}"
+case "$id" in ''|*[!a-f0-9]*) exit 2 ;; esac
+[ "${#id}" -eq 32 ] || exit 2
+state=/etc/alarm-push-center-updates
+mkdir -p "$state"
+chmod 700 "$state"
+umask 077
+version="$(jsonfilter -i "$job/job.json" -e '@.version')"
+sha="$(jsonfilter -i "$job/job.json" -e '@.sha256')"
+case "$version" in ''|*[!0-9.]*) exit 2 ;; esac
+case "$sha" in ''|*[!a-fA-F0-9]*) exit 2 ;; esac
+[ "${#sha}" -eq 64 ] || exit 2
+package="$job/alarm-push-center_${version}-1_aarch64_cortex-a53.ipk"
+write_state() {
+    phase="$1"
+    printf '{"phase":"%s","version":"%s","job_id":"%s","message":"%s"}\n' "$1" "$version" "$id" "$2" > "$state/state.json.tmp"
+    mv "$state/state.json.tmp" "$state/state.json"
+}
+trap 'rc=$?; if [ "$rc" -ne 0 ] && [ "${phase:-}" != failed ] && [ "${phase:-}" != rolled_back ]; then write_state failed "更新任务中止，备份和日志已保留，请管理员检查"; fi' EXIT
+write_state verifying '正在核对安装包'
+printf '%s  %s\n' "$sha" "$package" | sha256sum -c - >/dev/null || { write_state failed '安装包校验失败，未修改服务'; exit 1; }
+# Allow the initiating HTTP response to reach the browser before any restart.
+sleep 3
+free="$(df -Pk /overlay | awk 'END{print $4}')"
+need="$(( $(wc -c < "$package") / 1024 + 12288 ))"
+[ "$free" -gt "$need" ] || { write_state failed '存储空间不足，未修改服务'; exit 1; }
+write_state backing_up '正在备份配置和授权'
+tar -czf "$state/config-before-update.tar.gz.tmp" -C / etc/alarm-push-center
+mv "$state/config-before-update.tar.gz.tmp" "$state/config-before-update.tar.gz"
+boot=0
+/etc/init.d/alarm-push-center enabled && boot=1
+restore_boot() {
+    if [ "$boot" -eq 1 ]; then /etc/init.d/alarm-push-center enable; else /etc/init.d/alarm-push-center disable; fi
+}
+rollback() {
+    write_state rolling_back '更新未通过，正在恢复上一版'
+    /etc/init.d/alarm-push-center stop || true
+    rm -rf /tmp/alarm-push-center
+    if [ -s "$state/last-good.ipk" ] && (cd "$state" && sha256sum -c last-good.ipk.sha256 >/dev/null 2>&1) &&
+        opkg --force-downgrade --force-reinstall install "$state/last-good.ipk" >> "$state/install.log" 2>&1; then
+        /etc/init.d/alarm-push-center stop || true
+        tar -xzf "$state/config-before-update.tar.gz" -C /
+        if [ "${resume:-false}" = true ]; then printf running; else printf stopped; fi > /etc/alarm-push-center/.update-resume-once
+        restore_boot
+        /etc/init.d/alarm-push-center start
+        write_state rolled_back '已恢复上一版与升级前配置，请查看更新日志'
+    else
+        restore_boot
+        /etc/init.d/alarm-push-center start || true
+        write_state failed '自动回退未完成，配置备份已保留，需要管理员检查'
+    fi
+    exit 1
+}
+write_state installing '正在安装新版，页面将短暂断开'
+resume="$(jsonfilter -i "$job/job.json" -e '@.resume_running')"
+if [ "$resume" = true ]; then printf running; else printf stopped; fi > /etc/alarm-push-center/.update-resume-once
+/etc/init.d/alarm-push-center stop
+rm -rf /tmp/alarm-push-center
+opkg install "$package" > "$state/install.log" 2>&1 || rollback
+restore_boot
+/etc/init.d/alarm-push-center restart
+ok=0
+for attempt in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30; do
+    actual="$(curl -fsS --max-time 2 http://127.0.0.1:5080/api/health 2>/dev/null | jsonfilter -e '@.version' 2>/dev/null || true)"
+    if [ "$actual" = "$version" ]; then ok=1; break; fi
+    sleep 2
+done
+[ "$ok" -eq 1 ] || rollback
+cp "$package" "$state/last-good.ipk.tmp"
+mv "$state/last-good.ipk.tmp" "$state/last-good.ipk"
+printf '%s  last-good.ipk\n' "$sha" > "$state/last-good.ipk.sha256"
+write_state completed '更新完成，配置与手机授权已保留'
+rm -rf "$job"
