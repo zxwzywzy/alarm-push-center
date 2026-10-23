@@ -1,4 +1,41 @@
 {
   "schema": 1,
-  "platforms": {}
+  "platforms": {
+    "windows": {
+      "version": "1.4.0",
+      "file_name": "AlarmPushCenter-Setup-1.4.0-win-x64.exe",
+      "url": "https://github.com/zxwzywzy/alarm-push-center/releases/download/v1.4.0/AlarmPushCenter-Setup-1.4.0-win-x64.exe",
+      "sha256": "7ff65b5fe8d93d3e5e14bbe786d623312c3a21b76f0dadaa706bb7209820bdaf",
+      "size": 41821680,
+      "notes_url": "https://github.com/zxwzywzy/alarm-push-center/releases/tag/v1.4.0",
+      "api_url": "https://api.github.com/repos/zxwzywzy/alarm-push-center/releases/assets/670395201"
+    },
+    "openwrt": {
+      "version": "1.7.0",
+      "file_name": "alarm-push-center_1.7.0-1_aarch64_cortex-a53.ipk",
+      "url": "https://github.com/zxwzywzy/alarm-push-center/releases/download/openwrt-v1.7.0/alarm-push-center_1.7.0-1_aarch64_cortex-a53.ipk",
+      "sha256": "a756e2977102b05cc60d9c81d889e705d23c1ae7fffbf8f99cabeceea8ff43a9",
+      "size": 19055805,
+      "notes_url": "https://github.com/zxwzywzy/alarm-push-center/releases/tag/openwrt-v1.7.0",
+      "api_url": "https://api.github.com/repos/zxwzywzy/alarm-push-center/releases/assets/670397855"
+    },
+    "android": {
+      "version": "1.2.0",
+      "file_name": "AlarmHub-1.2.0-android.apk",
+      "url": "https://github.com/zxwzywzy/alarm-push-center/releases/download/mobile-v1.2.0/AlarmHub-1.2.0-android.apk",
+      "sha256": "433556ad8e95350783feeda828e070e19048c81ea9ee92360cf26347e02e7ce3",
+      "size": 32154870,
+      "notes_url": "https://github.com/zxwzywzy/alarm-push-center/releases/tag/mobile-v1.2.0",
+      "api_url": "https://api.github.com/repos/zxwzywzy/alarm-push-center/releases/assets/670399267"
+    },
+    "ios": {
+      "version": "1.2.0",
+      "file_name": "AlarmHub-1.2.0-unsigned.ipa",
+      "url": "https://github.com/zxwzywzy/alarm-push-center/releases/download/mobile-v1.2.0/AlarmHub-1.2.0-unsigned.ipa",
+      "sha256": "961c33d0e9145a22eb5b020cf9b0dd4e0a363a685d564a359496e87440162b08",
+      "size": 712574,
+      "notes_url": "https://github.com/zxwzywzy/alarm-push-center/releases/tag/mobile-v1.2.0",
+      "api_url": "https://api.github.com/repos/zxwzywzy/alarm-push-center/releases/assets/670399266"
+    }
+  }
 }
